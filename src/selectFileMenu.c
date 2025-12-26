@@ -59,9 +59,9 @@ void draw_selectFile(void) {
                 marioPipeIndex--;
         }
 
-
         if (keys & J_START) {
             saveIndex = marioPipeIndex;
+            HIDE_SPRITES;
             return;
         }
 
