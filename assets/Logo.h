@@ -26,7 +26,7 @@
 /* Bank of tiles. */
 #define LogoTileLabelBank 0
 
-#define logo_TileLen 64
+#define logo_TileLen 112
 
 /* Start of tile array. */
 extern unsigned char LogoTileLabel[];

@@ -34,6 +34,7 @@ void draw_selectFileMario(uint8_t tile_x, uint8_t tile_y, int8_t offset_x, int8_
 }
 
 void draw_selectFile(void) {
+    DISPLAY_OFF;
     uint8_t marioPipeIndex = 0;
 
     set_bkg_data(0, selectFile_TileLen, selectFileTile);
@@ -42,6 +43,7 @@ void draw_selectFile(void) {
 
     SHOW_BKG;
     SHOW_SPRITES;
+    DISPLAY_ON;
 
     uint8_t prev_keys = 0;
 
