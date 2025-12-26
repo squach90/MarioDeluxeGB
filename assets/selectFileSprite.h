@@ -1,6 +1,6 @@
 /*
 
- SELECTFILE.H
+ SELECTFILESPRITE.H
 
  Include File.
 
@@ -10,7 +10,7 @@
   Compression          : None.
   Counter              : None.
   Tile size            : 8 x 8
-  Tiles                : 0 to 37
+  Tiles                : 0 to 7
 
   Palette colors       : None.
   SGB Palette          : None.
@@ -22,12 +22,13 @@
 
 */
 
-/* Bank of tiles. */
-#define selectFileTileBank 0
 
-#define selectFile_TileLen 33
+/* Bank of tiles. */
+#define selectFileSpriteTileBank 0
+
+#define selectFileSprite_TileLen 8
 
 /* Start of tile array. */
-extern unsigned char selectFileTile[];
+extern unsigned char selectFileSpriteTile[];
 
-/* End of SELECTFILE.H */
+/* End of SELECTFILESPRITE.H */

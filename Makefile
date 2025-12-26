@@ -14,7 +14,7 @@ TARGET = $(BUILD_DIR)/mariodeluxe.gb
 # --------------------
 # Sources & objects
 # --------------------
-SRC  = $(wildcard $(SRC_DIR)/*.c)
+SRC  = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(ASSET_DIR)/*.c)
 OBJ  = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC))
 
 # --------------------
