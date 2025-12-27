@@ -1,45 +1,57 @@
 #include <gb/gb.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "selectFileMenu.h"
-#include "homeMenu.h"
+
 #include "main.h"
+#include "homeMenu.h"
+#include "selectFileMenu.h"
+#include "level1.h"
 
 void main(void) {
-    draw_homeMenu();
-    SHOW_BKG;
-    DISPLAY_ON;
-
     uint8_t state = MENU_HOME;
-    uint8_t prev_keys = 0;
+    uint8_t prev_state = 255; // valeur impossible pour forcer init
 
     while (1) {
+
+        if (state != prev_state) {
+            switch (state) {
+
+                case MENU_HOME:
+                    homeMenu_init();
+                    HIDE_SPRITES;
+                    break;
+
+                case MENU_FILESELECT:
+                    selectFile_init();
+                    break;
+
+                case MENU_GAME:
+                    level1_init();
+                    break;
+            }
+            prev_state = state;
+        }
+
         switch (state) {
 
             case MENU_HOME: {
-                draw_homeMenu();
-                wait_vbl_done();
-                DISPLAY_ON;
+                static uint8_t prev_keys = 0;
+                uint8_t keys = joypad();
 
-                while (1) {
-                    uint8_t keys = joypad();
-                    if ((keys & J_START) && !(prev_keys & J_START)) {
-                        state = MENU_FILESELECT;
-                        break;
-                    }
-                    prev_keys = keys;
-                    wait_vbl_done();
+                if ((keys & J_START) && !(prev_keys & J_START)) {
+                    state = MENU_FILESELECT;
                 }
+
+                prev_keys = keys;
+                wait_vbl_done();
                 break;
             }
 
             case MENU_FILESELECT:
-                state = draw_selectFile();
+                state = selectFile_loop();
                 break;
 
             case MENU_GAME:
-                // TODO: launch Game
+                level1_loop();
                 break;
         }
     }
