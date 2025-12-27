@@ -30,6 +30,7 @@ void level1_init(void) {
     wait_vbl_done();
     set_bkg_data(0, level1_TileLen, Level1TileLabel);
     set_bkg_submap(0, 0, 32, 18, level1TileMap, level1Width);
+    levelTileMap = level1TileMap;
     wait_vbl_done();
     sprite_hide_all();
     mario_init(4, 14);

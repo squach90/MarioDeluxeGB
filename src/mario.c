@@ -1,8 +1,7 @@
 #include "mario.h"
 #include "marioSprite.h"
 #include <stdlib.h>
-#include "level1Map.h"
-#include "level1.h"
+#include "main.h"
 
 #define MARIO_SPRITE_COUNT 4
 #define FP_SHIFT 8
@@ -120,6 +119,8 @@ void mario_update(void) {
 
     if ((mario_y >> FP_SHIFT) > 160) {
         mario_init(0, 13); // Reset Mario to start position
+        set_bkg_submap(0, 0, 32, 18, levelTileMap, levelWidth);
+        wait_vbl_done();
     }
 
     // --- 1. HORIZONTAL MOVEMENT & WALL COLLISION ---
@@ -137,7 +138,7 @@ void mario_update(void) {
         int32_t side_x = (facing_left) ? (next_x + 4) : (next_x + 12);
         int32_t side_y = mario_y + (8 << FP_SHIFT); // Check center-waist height
 
-        if (!is_solid(side_x << FP_SHIFT, side_y, level1TileMap)) {
+        if (!is_solid(side_x << FP_SHIFT, side_y, levelTileMap)) {
             mario_x = next_x; // Only move X if not hitting a wall
         }
     }
@@ -156,7 +157,7 @@ void mario_update(void) {
 
     // --- 3. GRAVITY ---
     int32_t current_gravity = GRAVITY;
-    if (!on_ground && abs(mario_vy) < 150) current_gravity = GRAVITY / 2;
+    if (!on_ground && labs(mario_vy) < 150) current_gravity = GRAVITY / 2;
 
     mario_vy += current_gravity;
     if (mario_vy > TERMINAL_VELOCITY) mario_vy = TERMINAL_VELOCITY;
@@ -176,10 +177,10 @@ void mario_update(void) {
 
             uint8_t column_to_draw = (camera_x >> 3) + 20;
 
-            set_bkg_submap(column_to_draw, 0, 1, 18, level1TileMap, levelWidth);
+            set_bkg_submap(column_to_draw, 0, 1, 18, levelTileMap, levelWidth);
         } else {
             uint8_t column_to_draw = (camera_x >> 3);
-            set_bkg_submap(column_to_draw, 0, 1, 18, level1TileMap, levelWidth);
+            set_bkg_submap(column_to_draw, 0, 1, 18, levelTileMap, levelWidth);
         }
     }
     old_camera_x = camera_x;
@@ -191,15 +192,15 @@ void mario_update(void) {
     int32_t right_check = (mario_x + 12) << FP_SHIFT;
 
     if (mario_vy < 0) { // Moving UP (Head check)
-        if (is_solid(left_check, mario_y, level1TileMap) || 
-            is_solid(right_check, mario_y, level1TileMap)) {
+        if (is_solid(left_check, mario_y, levelTileMap) ||
+            is_solid(right_check, mario_y, levelTileMap)) {
             mario_vy = 0;
             mario_y = (int32_t)(((mario_y >> FP_SHIFT) / 8 + 1) * 8) << FP_SHIFT;
         }
     } else { // Moving DOWN (Feet check)
         int32_t feet_y = mario_y + (16 << FP_SHIFT);
-        if (is_solid(left_check, feet_y, level1TileMap) || 
-            is_solid(right_check, feet_y, level1TileMap)) {
+        if (is_solid(left_check, feet_y, levelTileMap) ||
+            is_solid(right_check, feet_y, levelTileMap)) {
             mario_vy = 0;
             on_ground = 1;
             mario_y = (int32_t)(((feet_y >> FP_SHIFT) / 8) * 8 - 16) << FP_SHIFT;

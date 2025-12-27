@@ -8,4 +8,8 @@
 
 extern uint8_t saveIndex;
 
+extern int levelWidth;
+extern int levelHeight;
+extern const uint8_t * levelTileMap;
+
 #endif

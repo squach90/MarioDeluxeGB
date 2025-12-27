@@ -9,6 +9,8 @@
 int levelWidth = NULL;
 int levelHeight = NULL;
 
+const uint8_t * levelTileMap = NULL;
+
 void main(void) {
     uint8_t state = MENU_HOME;
     uint8_t prev_state = 255; // valeur impossible pour forcer init
