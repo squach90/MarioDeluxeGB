@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "main.h"
-#include "mario.h"
+#include "marioSprite.h"
 #include "selectFileMenu.h"
+#include "mario.h"
+#include "sprite.h"
 
 void loadMarioSprite(void);
 
@@ -17,6 +19,8 @@ void level1_init(void) {
 
     loadMarioSprite();
     fill_bkg_rect(0, 0, 20, 18, 127);
+    sprite_hide_all();
+    mario_init(6, 8);
 
     SHOW_BKG;
     SHOW_SPRITES;
@@ -27,5 +31,6 @@ void level1_init(void) {
 void level1_loop(void) {
     uint8_t keys = joypad();
     // TODO: logic here
+    mario_update();
     wait_vbl_done();
 }
