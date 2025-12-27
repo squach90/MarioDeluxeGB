@@ -26,7 +26,7 @@
 /* Bank of tiles. */
 #define MarioTileLabelBank 0
 
-#define mario_TileLen 14
+#define mario_TileLen 18
 
 /* Start of tile array. */
 extern unsigned char MarioTileLabel[];
