@@ -40,7 +40,7 @@ static uint8_t previous_keys = 0;
 
 uint16_t camera_x = 0;
 
-static uint16_t old_camera_x = 0;
+uint16_t old_camera_x = 0;
 
 // Frames for walking animation
 static const uint8_t top_left_frames[3]  = {4, 9, 10};
@@ -167,23 +167,8 @@ void mario_update(void) {
     } else {
         camera_x = 0;
     }
-    if (camera_x > (levelWidth * 8) - 160) {
-        camera_x = (levelWidth * 8) - 160;
-    }
-    move_bkg(camera_x, 0);
-
-    if ((camera_x >> 3) != (old_camera_x >> 3)) {
-        if (camera_x > old_camera_x) {
-
-            uint8_t column_to_draw = (camera_x >> 3) + 20;
-
-            set_bkg_submap(column_to_draw, 0, 1, 18, levelTileMap, levelWidth);
-        } else {
-            uint8_t column_to_draw = (camera_x >> 3);
-            set_bkg_submap(column_to_draw, 0, 1, 18, levelTileMap, levelWidth);
-        }
-    }
-    old_camera_x = camera_x;
+    uint16_t max_scroll = (levelWidth * 8) - 160;
+    if (camera_x > max_scroll) camera_x = max_scroll;
 
     // --- 4. VERTICAL COLLISION ---
     mario_y += mario_vy;

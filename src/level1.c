@@ -43,7 +43,21 @@ void level1_init(void) {
 
 void level1_loop(void) {
     uint8_t keys = joypad();
-    
+
     mario_update();
     wait_vbl_done();
+    move_bkg(camera_x, 0);
+
+    if ((camera_x >> 3) != (old_camera_x >> 3)) {
+        if (camera_x > old_camera_x) {
+
+            uint8_t column_to_draw = (camera_x >> 3) + 20;
+
+            set_bkg_submap(column_to_draw, 0, 1, 18, levelTileMap, levelWidth);
+        } else {
+            uint8_t column_to_draw = (camera_x >> 3);
+            set_bkg_submap(column_to_draw, 0, 1, 18, levelTileMap, levelWidth);
+        }
+    }
+    old_camera_x = camera_x;
 }

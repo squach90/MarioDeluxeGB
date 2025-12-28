@@ -8,4 +8,7 @@ void mario_init(uint8_t start_tile_x, uint8_t start_tile_y);
 void mario_update(void);
 extern const uint8_t solid_tiles[5];
 
+extern uint16_t camera_x;
+extern uint16_t old_camera_x;
+
 #endif
