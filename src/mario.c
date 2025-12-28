@@ -7,7 +7,7 @@
 #define FP_SHIFT 8
 
 // PHYSICS TUNING
-#define GRAVITY 72
+#define GRAVITY 62
 #define JUMP_POWER -1024
 #define TERMINAL_VELOCITY 1152
 #define MAX_JUMP_HOLD 15
@@ -68,7 +68,7 @@ uint8_t is_solid(int32_t x_fp, int32_t y_fp, const uint8_t *data) {
     if (y_fp < 0) return 0;
 
     uint8_t tile_id = data[ty * levelWidth + tx];
-    for(uint8_t i = 0; i < 5; i++) {
+    for(uint8_t i = 0; solid_tiles[i] != 255; i++) {
         if (tile_id == solid_tiles[i]) return 1;
     }
     return 0;

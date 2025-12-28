@@ -26,7 +26,7 @@
 /* Bank of tiles. */
 #define Level1TileLabelBank 0
 
-#define level1_TileLen 32
+#define level1_TileLen 33
 
 /* Start of tile array. */
 extern unsigned char Level1TileLabel[];

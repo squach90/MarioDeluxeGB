@@ -8,7 +8,6 @@
 
 int levelWidth = NULL;
 int levelHeight = NULL;
-
 const uint8_t * levelTileMap = NULL;
 
 void main(void) {
