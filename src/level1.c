@@ -10,8 +10,8 @@
 #include "level1Map.h"
 #include "level1Sprite.h"
 
-const uint8_t solid_tiles[] = {0, 1, 2, 3, 4, 5 ,6 ,7 ,8 ,9 , 10, 11, 12 ,13 ,14 ,15 ,16 ,17, 255};
-const int level1Width = 40; // TODO: change to real value
+const uint8_t solid_tiles[] = {0, 1, 2, 3, 4, 5 ,6 ,7 ,8 ,9 , 10, 11, 12 ,13 ,14 ,15 ,16 ,17, 32, 33 ,34 ,35, 35, 37, 38, 39, 40, 41, 42, 255};
+const int level1Width = 80; // TODO: change to real value
 const int level1Height = 18; // TODO: change to real value
 
 void loadMarioSprite(void);

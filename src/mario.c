@@ -15,7 +15,7 @@
 
 #define MARIO_WALK_SPEED 1
 #define MARIO_RUN_SPEED 2
-#define ANIM_WALK_DELAY 7
+#define ANIM_WALK_DELAY 8
 #define ANIM_RUN_DELAY 3
 
 // SPRITE IDS
