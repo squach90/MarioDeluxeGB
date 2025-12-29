@@ -130,19 +130,23 @@ void mario_update(void) {
     int32_t next_x = mario_x;
     if (keys & J_LEFT) {
         next_x -= current_speed;
-        moving = 1; facing_left = 1;
+        facing_left = 1; moving = 1;
     } else if (keys & J_RIGHT) {
         next_x += current_speed;
-        moving = 1; facing_left = 0;
+        facing_left = 0; moving = 1;
     }
 
     if (moving) {
-        // Check side collision (checking middle of Mario's height)
-        int32_t side_x = (facing_left) ? (next_x + 4) : (next_x + 12);
-        int32_t side_y = mario_y + (8 << FP_SHIFT); // Check center-waist height
+        int32_t check_x = (facing_left) ? (next_x + 4) : (next_x + 12);
 
-        if (!is_solid(side_x << FP_SHIFT, side_y, levelTileMap)) {
-            mario_x = next_x; // Only move X if not hitting a wall
+        int32_t head_y = mario_y + (4 << FP_SHIFT);
+        int32_t foot_y = mario_y + (14 << FP_SHIFT);
+
+        if (!is_solid(check_x << FP_SHIFT, head_y, levelTileMap) &&
+            !is_solid(check_x << FP_SHIFT, foot_y, levelTileMap)) {
+            mario_x = next_x;
+        } else {
+            moving = 0; // if wall touch -> stop wal animation
         }
     }
 
