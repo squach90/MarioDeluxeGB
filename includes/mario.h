@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 void mario_init(uint8_t start_tile_x, uint8_t start_tile_y);
+void mario_draw(uint8_t moving);
 void mario_update(void);
 
 extern uint16_t camera_x;

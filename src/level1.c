@@ -46,11 +46,15 @@ void level1_init(void) {
 
 void level1_loop(void) {
     uint8_t keys = joypad();
+    uint8_t moving = (keys & J_LEFT || keys & J_RIGHT);
 
     mario_update();
     hud_update();
+
     wait_vbl_done();
+
     move_bkg(camera_x, camera_y);
+    mario_draw(moving);
 
     if ((camera_x >> 3) != (old_camera_x >> 3)) {
         if (camera_x > old_camera_x) {

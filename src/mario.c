@@ -50,8 +50,6 @@ static const uint8_t top_right_frames[3] = {2, 2, 13};
 static const uint8_t bottom_bl_frames[3] = {5, 7, 11};
 static const uint8_t bottom_br_frames[3] = {6, 8, 12};
 
-// Populate this with your solid tile IDs (e.g., {1, 2, 3})
-
 void mario_init(uint8_t start_tile_x, uint8_t start_tile_y) {
     for (uint8_t i = 0; i < MARIO_SPRITE_COUNT; i++)
         mario_sprites[i] = i;
@@ -76,7 +74,7 @@ uint8_t is_solid(int32_t x_fp, int32_t y_fp, const uint8_t *data) {
     return 0;
 }
 
-static void mario_draw(uint8_t moving) {
+void mario_draw(uint8_t moving) {
     uint8_t tl, tr, bl, br;
 
     int16_t screen_x = mario_x - camera_x;
@@ -120,13 +118,13 @@ void mario_update(void) {
     uint8_t current_speed = (keys & J_B) ? MARIO_RUN_SPEED : MARIO_WALK_SPEED;
     uint8_t current_anim_delay = (keys & J_B) ? ANIM_RUN_DELAY : ANIM_WALK_DELAY;
 
-    if ((mario_y >> FP_SHIFT) > 240) {
-        mario_init(4, 28); // Reset Mario to start position
-        set_bkg_submap(0, 0, 32, 18, levelTileMap, levelWidth);
-        wait_vbl_done();
+    // 1. DEAD / RESET
+    if ((mario_y >> FP_SHIFT) > (levelHeight * 8)) {
+        mario_init(4, 2); 
+        return;
     }
 
-    // --- 1. HORIZONTAL MOVEMENT & WALL COLLISION ---
+    // 2. HORIZONTAL MOUVEMENT
     int32_t next_x = mario_x;
     if (keys & J_LEFT) {
         next_x -= current_speed;
@@ -138,66 +136,50 @@ void mario_update(void) {
 
     if (moving) {
         int32_t check_x = (facing_left) ? (next_x + 4) : (next_x + 12);
+        int32_t head_y = (mario_y >> FP_SHIFT) + 4;
+        int32_t foot_y = (mario_y >> FP_SHIFT) + 14;
 
-        int32_t head_y = mario_y + (4 << FP_SHIFT);
-        int32_t foot_y = mario_y + (14 << FP_SHIFT);
-
-        if (!is_solid(check_x << FP_SHIFT, head_y, levelTileMap) &&
-            !is_solid(check_x << FP_SHIFT, foot_y, levelTileMap)) {
+        if (!is_solid(check_x << FP_SHIFT, head_y << FP_SHIFT, levelTileMap) &&
+            !is_solid(check_x << FP_SHIFT, foot_y << FP_SHIFT, levelTileMap)) {
             mario_x = next_x;
         } else {
-            moving = 0; // if wall touch -> stop wal animation
+            moving = 0;
         }
     }
 
-    // --- 2. JUMP LOGIC ---
+    // 3. JUMP & GRAVITY
     if (on_ground) {
         if (newly_pressed & J_A) {
             mario_vy = JUMP_POWER;
             on_ground = 0;
             jump_hold_counter = 0;
         }
-    } else if ((keys & J_A) && jump_hold_counter < MAX_JUMP_HOLD) {
-        mario_vy += JUMP_BOOST;
-        jump_hold_counter++;
-    }
-
-    // --- 3. GRAVITY ---
-    int32_t current_gravity = GRAVITY;
-    if (!on_ground && labs(mario_vy) < 150) current_gravity = GRAVITY / 2;
-
-    mario_vy += current_gravity;
-    if (mario_vy > TERMINAL_VELOCITY) mario_vy = TERMINAL_VELOCITY;
-
-    if (mario_x > 80) {
-        camera_x = mario_x - 80;
     } else {
-        camera_x = 0;
+        if ((keys & J_A) && jump_hold_counter < MAX_JUMP_HOLD) {
+            mario_vy += JUMP_BOOST;
+            jump_hold_counter++;
+        }
+        
+        int32_t current_gravity = GRAVITY;
+        if (labs(mario_vy) < 150) current_gravity = GRAVITY / 2;
+        mario_vy += current_gravity;
+        
+        if (mario_vy > TERMINAL_VELOCITY) mario_vy = TERMINAL_VELOCITY;
     }
-    uint16_t max_scroll = (levelWidth * 8) - 160;
-    if (camera_x > max_scroll) camera_x = max_scroll;
 
-    int32_t mario_py = mario_y >> FP_SHIFT;
-    if (mario_py > 72) camera_y = mario_py - 72;
-    else camera_y = 0;
-
-    int16_t max_scroll_y = (levelHeight * 8) - 144;
-    if (max_scroll_y < 0) max_scroll_y = 0;
-    if (camera_y > max_scroll_y) camera_y = max_scroll_y;
-
-    // --- 4. VERTICAL COLLISION ---
+    // 4. VERTICAL PHYSICS  & COLLISIONS
     mario_y += mario_vy;
 
     int32_t left_check = (mario_x + 4) << FP_SHIFT;
     int32_t right_check = (mario_x + 12) << FP_SHIFT;
 
-    if (mario_vy < 0) { // Moving UP (Head check)
+    if (mario_vy < 0) {
         if (is_solid(left_check, mario_y, levelTileMap) ||
             is_solid(right_check, mario_y, levelTileMap)) {
             mario_vy = 0;
             mario_y = (int32_t)(((mario_y >> FP_SHIFT) / 8 + 1) * 8) << FP_SHIFT;
         }
-    } else { // Moving DOWN (Feet check)
+    } else {
         int32_t feet_y = mario_y + (16 << FP_SHIFT);
         if (is_solid(left_check, feet_y, levelTileMap) ||
             is_solid(right_check, feet_y, levelTileMap)) {
@@ -209,7 +191,22 @@ void mario_update(void) {
         }
     }
 
-    // --- 5. ANIMATION ---
+    // 5. CAMERA SYNC
+    int32_t final_py = mario_y >> FP_SHIFT;
+    
+    // Camera X
+    if (mario_x > 80) camera_x = mario_x - 80;
+    else camera_x = 0;
+    uint16_t max_sx = (levelWidth * 8) - 160;
+    if (camera_x > max_sx) camera_x = max_sx;
+
+    // Camera Y
+    if (final_py > 72) camera_y = final_py - 72;
+    else camera_y = 0;
+    int16_t max_sy = (levelHeight * 8) - 144;
+    if (camera_y > max_sy) camera_y = max_sy;
+
+    // 6. ANIMATION
     if (moving && on_ground) {
         if (++walk_counter > current_anim_delay) {
             walk_frame = (walk_frame + 1) % 3;
@@ -220,6 +217,5 @@ void mario_update(void) {
         walk_frame = 0; top_frame_index = 0; walk_counter = 0;
     }
 
-    mario_draw(moving);
     previous_keys = keys;
 }
