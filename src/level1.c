@@ -22,6 +22,8 @@ const int level1Height = 32; // TODO: change to real value
 uint8_t bump_timer = 0;
 uint16_t bump_block_x, bump_block_y;
 int16_t bump_offset_y = 0;
+uint8_t bump_is_brick = 0;
+
 
 void loadMarioSprite(void);
 
@@ -30,26 +32,32 @@ void loadMarioSprite(void) {
 }
 
 void on_block_hit(uint16_t block_x, uint16_t block_y, uint8_t tile_id) {
-    // Top-left (8 -> 12)
-    level1TileMap[block_y * level1Width + block_x] = 14;
-    // Top-right (10 -> 12)
-    level1TileMap[block_y * level1Width + block_x + 1] = 16;
-    // Bottom-left (9 -> 13)
-    level1TileMap[(block_y + 1) * level1Width + block_x] = 15;
-    // Bottom-right (11 -> 13)
-    level1TileMap[(block_y + 1) * level1Width + block_x + 1] = 17;
+    if (bump_timer > 0) return;
 
-    // update blocks
+    bump_is_brick = (tile_id == 12 || tile_id == 13);
+
+    if (bump_is_brick) {
+        set_sprite_data(22, 1, &Level1TileLabel[12 * 16]); 
+        set_sprite_data(24, 1, &Level1TileLabel[13 * 16]);
+    } else {
+        level1TileMap[block_y * level1Width + block_x] = 14;
+        level1TileMap[block_y * level1Width + block_x + 1] = 16;
+        level1TileMap[(block_y + 1) * level1Width + block_x] = 15;
+        level1TileMap[(block_y + 1) * level1Width + block_x + 1] = 17;
+
+        set_sprite_data(18, 4, &Level1TileLabel[14 * 16]);
+        coins++;
+    }
+
     uint8_t empty_tiles[4] = {127, 127, 127, 127};
     set_bkg_tiles(block_x % 32, block_y % 32, 2, 2, empty_tiles);
 
-    // 3. Initialize the Bump Animation
-    bump_timer = 10; // Animation duration in frames
+    bump_timer = 10;
     bump_block_x = block_x;
     bump_block_y = block_y;
-
-    coins++;
+    bump_offset_y = 0;
 }
+
 
 uint8_t is_special_pipe(uint16_t pipe_x, uint16_t pipe_y) {
     for (uint8_t i = 0; special_pipes[i] != 0xFF; i += 2) {
@@ -79,6 +87,8 @@ void level1_init(void) {
     set_bkg_submap(0, 0, 32, 32, level1TileMap, level1Width);
     levelTileMap = level1TileMap;
     set_sprite_data(18, 4, &Level1TileLabel[14 * 16]);  // import empty "? blocks" tiles in sprite section
+    set_sprite_data(22, 1, &Level1TileLabel[12 * 16]); // top-left
+    set_sprite_data(23, 1, &Level1TileLabel[13 * 16]); // bottom-right
     wait_vbl_done();
     sprite_hide_all();
     mario_init(4, 28);
@@ -106,11 +116,25 @@ void level1_loop(void) {
         if (bump_timer > 5) bump_offset_y -= 2;
         else bump_offset_y += 2;
 
+        // uint8_t base_tile = bump_is_brick ? 22 : 18;
+
         int16_t sx = (bump_block_x * 8) - camera_x + 8;
         int16_t sy = (bump_block_y * 8) - camera_y + 16 + bump_offset_y;
 
-        set_sprite_tile(30, 18); set_sprite_tile(31, 20);
-        set_sprite_tile(32, 19); set_sprite_tile(33, 21);
+        if (bump_is_brick) {
+            // Brick
+            set_sprite_tile(30, 22); // TL
+            set_sprite_tile(31, 22); // TR
+            set_sprite_tile(32, 23); // BL
+            set_sprite_tile(33, 23); // BR
+        } else {
+            // ? block
+            set_sprite_tile(30, 18);
+            set_sprite_tile(31, 20);
+            set_sprite_tile(32, 19);
+            set_sprite_tile(33, 21);
+        }
+
 
         move_sprite(30, sx, sy);
         move_sprite(31, sx + 8, sy);

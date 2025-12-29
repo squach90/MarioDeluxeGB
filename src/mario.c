@@ -97,8 +97,8 @@ uint8_t is_solid(int32_t x_fp, int32_t y_fp, const uint8_t *data) {
 }
 
 uint8_t is_block(uint8_t tile_id) {
-    // Check if this tile is a ? block (8, 9, 10, 11)
-    return (tile_id == 8 || tile_id == 9 || tile_id == 10 || tile_id == 11);
+    // Check if this tile is a ? block (8, 9, 10, 11) or a brick (12, 13)
+    return (tile_id >= 8 && tile_id <= 13);
 }
 
 uint8_t is_pipe_top(uint8_t tile_id) {
@@ -154,17 +154,18 @@ void check_block_hit(int32_t x_fp, int32_t y_fp) {
         uint16_t block_x = tx;
         uint16_t block_y = ty;
 
-        // If we hit tile 10 or 11 (right side), adjust to left side
-        if (tile_id == 10 || tile_id == 11) {
-            block_x = tx - 1;
+        if (tile_id >= 8 && tile_id <= 11) {
+            if (tile_id == 10 || tile_id == 11) block_x = tx - 1;
+            if (tile_id == 9 || tile_id == 11)  block_y = ty - 1;
         }
 
-        // If we hit tile 9 or 11 (bottom side), adjust to top side
-        if (tile_id == 9 || tile_id == 11) {
-            block_y = ty - 1;
+        else if (tile_id == 12 || tile_id == 13) {
+            if (levelTileMap[ty * levelWidth + (tx - 1)] == tile_id) {
+                block_x = tx - 1;
+            }
+            if (tile_id == 13) block_y = ty - 1;
         }
 
-        // Only trigger if we haven't hit this exact block this frame
         if (block_x != last_hit_block_x || block_y != last_hit_block_y) {
             last_hit_block_x = block_x;
             last_hit_block_y = block_y;
