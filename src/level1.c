@@ -12,7 +12,7 @@
 
 const uint8_t solid_tiles[] = {0, 1, 2, 3, 4, 5 ,6 ,7 ,8 ,9 , 10, 11, 12 ,13 ,14 ,15 ,16 ,17, 32, 33 ,34 ,35, 35, 37, 38, 39, 40, 41, 42, 255};
 const int level1Width = 80; // TODO: change to real value
-const int level1Height = 18; // TODO: change to real value
+const int level1Height = 32; // TODO: change to real value
 
 void loadMarioSprite(void);
 
@@ -29,7 +29,7 @@ void level1_init(void) {
     levelWidth = level1Width;
     wait_vbl_done();
     set_bkg_data(0, level1_TileLen, Level1TileLabel);
-    set_bkg_submap(0, 0, 32, 18, level1TileMap, level1Width);
+    set_bkg_submap(0, 0, 32, 32, level1TileMap, level1Width);
     levelTileMap = level1TileMap;
     wait_vbl_done();
     sprite_hide_all();
@@ -46,17 +46,17 @@ void level1_loop(void) {
 
     mario_update();
     wait_vbl_done();
-    move_bkg(camera_x, 0);
+    move_bkg(camera_x, camera_y);
 
     if ((camera_x >> 3) != (old_camera_x >> 3)) {
         if (camera_x > old_camera_x) {
 
             uint8_t column_to_draw = (camera_x >> 3) + 20;
 
-            set_bkg_submap(column_to_draw, 0, 1, 18, levelTileMap, levelWidth);
+            set_bkg_submap(column_to_draw, 0, 1, 32, levelTileMap, levelWidth);
         } else {
             uint8_t column_to_draw = (camera_x >> 3);
-            set_bkg_submap(column_to_draw, 0, 1, 18, levelTileMap, levelWidth);
+            set_bkg_submap(column_to_draw, 0, 1, 32, levelTileMap, levelWidth);
         }
     }
     old_camera_x = camera_x;

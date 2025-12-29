@@ -10,4 +10,7 @@ void mario_update(void);
 extern uint16_t camera_x;
 extern uint16_t old_camera_x;
 
+extern uint16_t camera_y;
+extern uint16_t old_camera_y;
+
 #endif

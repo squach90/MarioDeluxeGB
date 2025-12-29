@@ -39,8 +39,10 @@ static uint8_t top_frame_index = 0;
 static uint8_t previous_keys = 0;
 
 uint16_t camera_x = 0;
+uint16_t camera_y = 0;
 
 uint16_t old_camera_x = 0;
+uint16_t old_camera_y = 0;
 
 // Frames for walking animation
 static const uint8_t top_left_frames[3]  = {4, 9, 10};
@@ -78,6 +80,7 @@ static void mario_draw(uint8_t moving) {
     uint8_t tl, tr, bl, br;
 
     int16_t screen_x = mario_x - camera_x;
+    int16_t screen_y = (mario_y >> FP_SHIFT) - camera_y;
 
     if (!on_ground) {
         tl = JUMP_TL; tr = JUMP_TR; bl = JUMP_BL; br = JUMP_BR;
@@ -103,10 +106,10 @@ static void mario_draw(uint8_t moving) {
     for (uint8_t i = 0; i < MARIO_SPRITE_COUNT; i++)
         set_sprite_prop(mario_sprites[i], prop);
 
-    move_sprite(mario_sprites[0], screen_x + 8,  (mario_y >> FP_SHIFT) + 16 + 1);
-    move_sprite(mario_sprites[1], screen_x + 16, (mario_y >> FP_SHIFT) + 16 + 1);
-    move_sprite(mario_sprites[2], screen_x + 8,  (mario_y >> FP_SHIFT) + 24 + 1);
-    move_sprite(mario_sprites[3], screen_x + 16, (mario_y >> FP_SHIFT) + 24 + 1);
+    move_sprite(mario_sprites[0], screen_x + 8,  screen_y + 16);
+    move_sprite(mario_sprites[1], screen_x + 16, screen_y + 16);
+    move_sprite(mario_sprites[2], screen_x + 8,  screen_y + 24);
+    move_sprite(mario_sprites[3], screen_x + 16, screen_y + 24);
 }
 
 void mario_update(void) {
@@ -117,7 +120,7 @@ void mario_update(void) {
     uint8_t current_speed = (keys & J_B) ? MARIO_RUN_SPEED : MARIO_WALK_SPEED;
     uint8_t current_anim_delay = (keys & J_B) ? ANIM_RUN_DELAY : ANIM_WALK_DELAY;
 
-    if ((mario_y >> FP_SHIFT) > 160) {
+    if ((mario_y >> FP_SHIFT) > 240) {
         mario_init(0, 13); // Reset Mario to start position
         set_bkg_submap(0, 0, 32, 18, levelTileMap, levelWidth);
         wait_vbl_done();
@@ -169,6 +172,14 @@ void mario_update(void) {
     }
     uint16_t max_scroll = (levelWidth * 8) - 160;
     if (camera_x > max_scroll) camera_x = max_scroll;
+
+    int32_t mario_py = mario_y >> FP_SHIFT;
+    if (mario_py > 72) camera_y = mario_py - 72;
+    else camera_y = 0;
+
+    int16_t max_scroll_y = (levelHeight * 8) - 144;
+    if (max_scroll_y < 0) max_scroll_y = 0;
+    if (camera_y > max_scroll_y) camera_y = max_scroll_y;
 
     // --- 4. VERTICAL COLLISION ---
     mario_y += mario_vy;
