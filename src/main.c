@@ -9,6 +9,9 @@
 int levelWidth = NULL;
 int levelHeight = NULL;
 const uint8_t * levelTileMap = NULL;
+int scrore = 0;
+int coins = 0;
+int timer = NULL;
 
 void main(void) {
     uint8_t state = MENU_HOME;

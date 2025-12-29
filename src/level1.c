@@ -9,6 +9,7 @@
 #include "sprite.h"
 #include "level1Map.h"
 #include "level1Sprite.h"
+#include "hud.h"
 
 const uint8_t solid_tiles[] = {0, 1, 2, 3, 4, 5 ,6 ,7 ,8 ,9 , 10, 11, 12 ,13 ,14 ,15 ,16 ,17, 32, 33 ,34 ,35, 35, 37, 38, 39, 40, 41, 42, 255};
 const int level1Width = 80; // TODO: change to real value
@@ -34,6 +35,8 @@ void level1_init(void) {
     wait_vbl_done();
     sprite_hide_all();
     mario_init(4, 28);
+    timer = 300;
+    hud_init();
 
     SHOW_BKG;
     SHOW_SPRITES;
@@ -45,6 +48,7 @@ void level1_loop(void) {
     uint8_t keys = joypad();
 
     mario_update();
+    hud_update();
     wait_vbl_done();
     move_bkg(camera_x, camera_y);
 
