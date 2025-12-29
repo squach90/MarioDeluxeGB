@@ -37,7 +37,7 @@ void on_block_hit(uint16_t block_x, uint16_t block_y, uint8_t tile_id) {
     bump_is_brick = (tile_id == 12 || tile_id == 13);
 
     if (bump_is_brick) {
-        set_sprite_data(22, 1, &Level1TileLabel[12 * 16]); 
+        set_sprite_data(22, 1, &Level1TileLabel[12 * 16]);
         set_sprite_data(24, 1, &Level1TileLabel[13 * 16]);
     } else {
         level1TileMap[block_y * level1Width + block_x] = 14;
@@ -47,6 +47,7 @@ void on_block_hit(uint16_t block_x, uint16_t block_y, uint8_t tile_id) {
 
         set_sprite_data(18, 4, &Level1TileLabel[14 * 16]);
         coins++;
+        score += 100;
     }
 
     uint8_t empty_tiles[4] = {127, 127, 127, 127};
@@ -70,7 +71,8 @@ uint8_t is_special_pipe(uint16_t pipe_x, uint16_t pipe_y) {
 
 void on_pipe_enter(uint16_t pipe_x, uint16_t pipe_y) {
     if (is_special_pipe(pipe_x, pipe_y)) {
-        coins += 4;
+        coins++;
+        score += 100;
         // TODO: load another map
     }
 }
@@ -116,8 +118,6 @@ void level1_loop(void) {
         if (bump_timer > 5) bump_offset_y -= 2;
         else bump_offset_y += 2;
 
-        // uint8_t base_tile = bump_is_brick ? 22 : 18;
-
         int16_t sx = (bump_block_x * 8) - camera_x + 8;
         int16_t sy = (bump_block_y * 8) - camera_y + 16 + bump_offset_y;
 
@@ -149,6 +149,11 @@ void level1_loop(void) {
             set_bkg_submap(bump_block_x, bump_block_y, 2, 2, level1TileMap, level1Width);
             bump_offset_y = 0;
         }
+    }
+
+    if (coins >= 100) {
+        coins = 0;
+        life++;
     }
 
     wait_vbl_done();

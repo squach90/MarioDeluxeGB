@@ -12,8 +12,9 @@ extern int levelWidth;
 extern int levelHeight;
 extern uint8_t * levelTileMap;
 extern const uint8_t solid_tiles[];
-extern int scrore;
+extern int score;
 extern int coins;
 extern int timer;
+extern int life;
 
 #endif

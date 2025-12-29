@@ -8,10 +8,11 @@
 
 int levelWidth = NULL;
 int levelHeight = NULL;
-const uint8_t * levelTileMap = NULL;
-int scrore = 0;
+uint8_t * levelTileMap = NULL;
+int score = 0;
 int coins = 0;
 int timer = NULL;
+int life = 5;
 
 void main(void) {
     uint8_t state = MENU_HOME;

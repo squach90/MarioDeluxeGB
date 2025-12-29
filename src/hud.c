@@ -38,9 +38,9 @@ void hud_update(void) {
         timer--;
     }
 
-    if (scrore != last_score) {
-        hud_print_num(1, 0, 5, scrore);
-        last_score = scrore;
+    if (score != last_score) {
+        hud_print_num(1, 0, 5, score);
+        last_score = score;
     }
 
     if (coins != last_coins) {
