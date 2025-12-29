@@ -44,6 +44,14 @@ uint16_t camera_y = 0;
 uint16_t old_camera_x = 0;
 uint16_t old_camera_y = 0;
 
+// Block detection callback
+static block_hit_callback block_callback = NULL;
+static uint16_t last_hit_block_x = 0xFFFF;
+static uint16_t last_hit_block_y = 0xFFFF;
+
+// Pipe detection callback
+static pipe_enter_callback pipe_callback = NULL;
+
 // Frames for walking animation
 static const uint8_t top_left_frames[3]  = {4, 9, 10};
 static const uint8_t top_right_frames[3] = {2, 2, 13};
@@ -58,20 +66,111 @@ void mario_init(uint8_t start_tile_x, uint8_t start_tile_y) {
     mario_y = (int32_t)start_tile_y * 8 << FP_SHIFT;
     mario_vy = 0;
     on_ground = 0;
+    last_hit_block_x = 0xFFFF;
+    last_hit_block_y = 0xFFFF;
+}
+
+void mario_set_block_callback(block_hit_callback callback) {
+    block_callback = callback;
+}
+
+void mario_set_pipe_callback(pipe_enter_callback callback) {
+    pipe_callback = callback;
 }
 
 uint8_t is_solid(int32_t x_fp, int32_t y_fp, const uint8_t *data) {
-    uint16_t tx = (x_fp >> FP_SHIFT) / 8;
-    uint16_t ty = (y_fp >> FP_SHIFT) / 8;
+    int16_t pixel_x = x_fp >> FP_SHIFT;
+    int16_t pixel_y = y_fp >> FP_SHIFT;
+
+    if (pixel_x < 0 || pixel_y < 0) return 0;
+
+    uint16_t tx = pixel_x / 8;
+    uint16_t ty = pixel_y / 8;
 
     if (tx >= levelWidth || ty >= levelHeight) return 0;
-    if (y_fp < 0) return 0;
 
     uint8_t tile_id = data[ty * levelWidth + tx];
     for(uint8_t i = 0; solid_tiles[i] != 255; i++) {
         if (tile_id == solid_tiles[i]) return 1;
     }
     return 0;
+}
+
+uint8_t is_block(uint8_t tile_id) {
+    // Check if this tile is a ? block (8, 9, 10, 11)
+    return (tile_id == 8 || tile_id == 9 || tile_id == 10 || tile_id == 11);
+}
+
+uint8_t is_pipe_top(uint8_t tile_id) {
+    // Check if this tile is the top of a pipe
+    // Pipes are tiles 32-43 based on your solid_tiles array
+    // Top of pipes are typically 32, 33, 34, 35
+    return (tile_id == 32 || tile_id == 33 || tile_id == 34 || tile_id == 35);
+}
+
+void check_pipe_enter(void) {
+    if (pipe_callback == NULL || !on_ground) return;
+
+    int16_t center_x = mario_x;
+    int16_t feet_y = (mario_y >> FP_SHIFT) + 16;
+
+    // Convert to tile coordinates
+    uint16_t tx = center_x / 8;
+    uint16_t ty = feet_y / 8;
+
+    if (tx >= levelWidth || ty >= levelHeight) return;
+
+    // Check the tile Mario is standing on
+    uint8_t tile_id = levelTileMap[ty * levelWidth + tx];
+
+    // If standing on top of a pipe, trigger callback
+    if (is_pipe_top(tile_id)) {
+        // Find the left edge of the pipe (tile 32 or 34)
+        uint16_t pipe_x = tx;
+        if (tile_id == 33 || tile_id == 35) {
+            pipe_x = tx - 1;
+        }
+
+        pipe_callback(pipe_x, ty);
+    }
+}
+
+void check_block_hit(int32_t x_fp, int32_t y_fp) {
+    int16_t pixel_x = x_fp >> FP_SHIFT;
+    int16_t pixel_y = y_fp >> FP_SHIFT;
+
+    if (pixel_x < 0 || pixel_y < 0) return;
+
+    uint16_t tx = pixel_x / 8;
+    uint16_t ty = pixel_y / 8;
+
+    if (tx >= levelWidth || ty >= levelHeight) return;
+
+    uint8_t tile_id = levelTileMap[ty * levelWidth + tx];
+
+    // If it's a block and we have a callback
+    if (is_block(tile_id) && block_callback != NULL) {
+        // Find the top-left corner of the block (blocks are 2x2)
+        uint16_t block_x = tx;
+        uint16_t block_y = ty;
+
+        // If we hit tile 10 or 11 (right side), adjust to left side
+        if (tile_id == 10 || tile_id == 11) {
+            block_x = tx - 1;
+        }
+
+        // If we hit tile 9 or 11 (bottom side), adjust to top side
+        if (tile_id == 9 || tile_id == 11) {
+            block_y = ty - 1;
+        }
+
+        // Only trigger if we haven't hit this exact block this frame
+        if (block_x != last_hit_block_x || block_y != last_hit_block_y) {
+            last_hit_block_x = block_x;
+            last_hit_block_y = block_y;
+            block_callback(block_x, block_y, tile_id);
+        }
+    }
 }
 
 void mario_draw(uint8_t moving) {
@@ -118,9 +217,20 @@ void mario_update(void) {
     uint8_t current_speed = (keys & J_B) ? MARIO_RUN_SPEED : MARIO_WALK_SPEED;
     uint8_t current_anim_delay = (keys & J_B) ? ANIM_RUN_DELAY : ANIM_WALK_DELAY;
 
+    // Reset block hit tracking when not jumping into blocks
+    if (mario_vy >= 0) {
+        last_hit_block_x = 0xFFFF;
+        last_hit_block_y = 0xFFFF;
+    }
+
+    // Check for pipe entry (DOWN pressed while on ground on a pipe)
+    if ((keys & J_DOWN) && on_ground) {
+        check_pipe_enter();
+    }
+
     // 1. DEAD / RESET
     if ((mario_y >> FP_SHIFT) > (levelHeight * 8)) {
-        mario_init(4, 2); 
+        mario_init(4, 2);
         return;
     }
 
@@ -159,11 +269,11 @@ void mario_update(void) {
             mario_vy += JUMP_BOOST;
             jump_hold_counter++;
         }
-        
+
         int32_t current_gravity = GRAVITY;
         if (labs(mario_vy) < 150) current_gravity = GRAVITY / 2;
         mario_vy += current_gravity;
-        
+
         if (mario_vy > TERMINAL_VELOCITY) mario_vy = TERMINAL_VELOCITY;
     }
 
@@ -174,8 +284,14 @@ void mario_update(void) {
     int32_t right_check = (mario_x + 12) << FP_SHIFT;
 
     if (mario_vy < 0) {
+        // Moving upward - check head collision
         if (is_solid(left_check, mario_y, levelTileMap) ||
             is_solid(right_check, mario_y, levelTileMap)) {
+
+            // Check if we hit a block (check center point only to avoid double hits)
+            int32_t center_check = (mario_x + 8) << FP_SHIFT;
+            check_block_hit(center_check, mario_y);
+
             mario_vy = 0;
             mario_y = (int32_t)(((mario_y >> FP_SHIFT) / 8 + 1) * 8) << FP_SHIFT;
         }
@@ -193,7 +309,7 @@ void mario_update(void) {
 
     // 5. CAMERA SYNC
     int32_t final_py = mario_y >> FP_SHIFT;
-    
+
     // Camera X
     if (mario_x > 80) camera_x = mario_x - 80;
     else camera_x = 0;
