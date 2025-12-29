@@ -33,7 +33,7 @@ void level1_init(void) {
     levelTileMap = level1TileMap;
     wait_vbl_done();
     sprite_hide_all();
-    mario_init(4, 14);
+    mario_init(4, 28);
 
     SHOW_BKG;
     SHOW_SPRITES;

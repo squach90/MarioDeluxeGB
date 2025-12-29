@@ -7,7 +7,7 @@
 #define FP_SHIFT 8
 
 // PHYSICS TUNING
-#define GRAVITY 62
+#define GRAVITY 60
 #define JUMP_POWER -1024
 #define TERMINAL_VELOCITY 1152
 #define MAX_JUMP_HOLD 15
@@ -121,7 +121,7 @@ void mario_update(void) {
     uint8_t current_anim_delay = (keys & J_B) ? ANIM_RUN_DELAY : ANIM_WALK_DELAY;
 
     if ((mario_y >> FP_SHIFT) > 240) {
-        mario_init(0, 13); // Reset Mario to start position
+        mario_init(4, 28); // Reset Mario to start position
         set_bkg_submap(0, 0, 32, 18, levelTileMap, levelWidth);
         wait_vbl_done();
     }
