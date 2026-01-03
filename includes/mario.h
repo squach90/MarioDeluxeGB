@@ -14,10 +14,16 @@ void mario_set_block_callback(block_hit_callback callback);
 typedef void (*pipe_enter_callback)(uint16_t tile_x, uint16_t tile_y);
 void mario_set_pipe_callback(pipe_enter_callback callback);
 
+uint8_t is_solid(int32_t x_fp, int32_t y_fp, const uint8_t *data);
+
 extern uint16_t camera_x;
 extern uint16_t old_camera_x;
 
 extern uint16_t camera_y;
 extern uint16_t old_camera_y;
+
+extern int32_t mario_x;
+extern int32_t mario_y;
+extern int32_t mario_vy;
 
 #endif

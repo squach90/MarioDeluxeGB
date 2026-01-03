@@ -10,6 +10,10 @@
 #include "level1Map.h"
 #include "level1Sprite.h"
 #include "hud.h"
+#include "goomba.h"
+#include "object-enemies.h"
+
+Goomba g1;
 
 const uint8_t solid_tiles[] = {0, 1, 2, 3, 4, 5 ,6 ,7 ,8 ,9 , 10, 11, 12 ,13 ,14 ,15 ,16 ,17, 32, 33 ,34 ,35, 35, 37, 38, 39, 40, 41, 42, 255};
 const uint8_t special_pipes[] = {
@@ -91,6 +95,7 @@ void level1_init(void) {
     set_sprite_data(18, 4, &Level1TileLabel[14 * 16]);  // import empty "? blocks" tiles in sprite section
     set_sprite_data(22, 1, &Level1TileLabel[12 * 16]); // top-left
     set_sprite_data(23, 1, &Level1TileLabel[13 * 16]); // bottom-right
+    set_sprite_data(40, 7, Object_EnenTileLabel);
     wait_vbl_done();
     sprite_hide_all();
     mario_init(4, 28);
@@ -100,6 +105,8 @@ void level1_init(void) {
 
     timer = 300;
     hud_init();
+
+    goomba_init(&g1, 40, 28);
 
     SHOW_BKG;
     SHOW_SPRITES;
@@ -156,10 +163,15 @@ void level1_loop(void) {
         life++;
     }
 
+    goomba_update(&g1);
+
     wait_vbl_done();
 
     move_bkg(camera_x, camera_y);
     mario_draw(moving);
+
+    goomba_draw(&g1, 10);
+
 
     if ((camera_x >> 3) != (old_camera_x >> 3)) {
         if (camera_x > old_camera_x) {

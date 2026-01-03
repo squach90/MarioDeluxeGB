@@ -25,9 +25,9 @@
 #define JUMP_BR 16
 
 static uint8_t mario_sprites[MARIO_SPRITE_COUNT];
-static int32_t mario_x;
-static int32_t mario_y;
-static int32_t mario_vy = 0;
+int32_t mario_x;
+int32_t mario_y;
+int32_t mario_vy = 0;
 
 static uint8_t facing_left = 0;
 static uint8_t on_ground = 0;
