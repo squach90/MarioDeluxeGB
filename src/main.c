@@ -13,6 +13,7 @@ int score = 0;
 int coins = 0;
 int timer = NULL;
 int life = 5;
+int is_paused = 0;
 
 void main(void) {
     uint8_t state = MENU_HOME;

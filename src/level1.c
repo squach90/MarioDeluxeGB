@@ -28,7 +28,6 @@ uint16_t bump_block_x, bump_block_y;
 int16_t bump_offset_y = 0;
 uint8_t bump_is_brick = 0;
 
-
 void loadMarioSprite(void);
 
 void loadMarioSprite(void) {
@@ -116,10 +115,23 @@ void level1_init(void) {
 
 void level1_loop(void) {
     uint8_t keys = joypad();
+    static uint8_t last_keys = 0;
+
+    if ((keys & J_START) && !(last_keys & J_START)) {
+        is_paused = !is_paused;
+    }
+    last_keys = keys;
+
+    hud_update();
+
+    if (is_paused) {
+        wait_vbl_done();
+        return;
+    }
+
     uint8_t moving = (keys & J_LEFT || keys & J_RIGHT);
 
     mario_update();
-    hud_update();
 
     if (bump_timer > 0) {
         if (bump_timer > 5) bump_offset_y -= 2;

@@ -9,6 +9,8 @@ static int last_score = -1;
 static int last_coins = -1;
 static int last_timer = -1;
 
+static uint8_t current_win_y = 136;
+
 void hud_print_num(uint8_t x, uint8_t y, uint8_t digits, int value) {
     for (int8_t i = digits - 1; i >= 0; i--) {
         set_win_tile_xy(x + i, y, (uint8_t)(value % 10) + 3 + HUD_TILE_OFFSET);
@@ -34,7 +36,7 @@ void hud_init(void) {
 }
 
 void hud_update(void) {
-    if (sys_time % 60 == 0 && timer > 0) {
+    if (!is_paused && sys_time % 60 == 0 && timer > 0) {
         timer--;
     }
 
@@ -53,7 +55,17 @@ void hud_update(void) {
         last_timer = timer;
     }
 
-    if (timer == 0) {
-        // TODO: dead
+    if (is_paused) {
+        if (current_win_y > 80) {
+            current_win_y -= 8; // Climbing speed
+            move_win(7, current_win_y);
+        }
+        HIDE_SPRITES;
+    } else {
+        if (current_win_y < 136) {
+            current_win_y += 8;
+            move_win(7, current_win_y);
+        }
+        SHOW_SPRITES;
     }
 }

@@ -16,5 +16,6 @@ extern int score;
 extern int coins;
 extern int timer;
 extern int life;
+extern int is_paused;
 
 #endif

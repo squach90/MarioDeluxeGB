@@ -230,7 +230,7 @@ void mario_update(void) {
     }
 
     // 1. DEAD / RESET
-    if ((mario_y >> FP_SHIFT) > (levelHeight * 8)) {
+    if ((mario_y >> FP_SHIFT) > (levelHeight * 8) || timer <= 0) {
         mario_init(4, 2);
         return;
     }
