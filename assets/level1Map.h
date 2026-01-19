@@ -4,6 +4,6 @@
 #include <stdint.h>
 
 
-extern unsigned char level1TileMap[];
+extern const unsigned char level1TileMap[];
 
 #endif

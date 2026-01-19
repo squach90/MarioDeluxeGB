@@ -79,20 +79,20 @@ void mario_set_pipe_callback(pipe_enter_callback callback) {
 }
 
 uint8_t is_solid(int32_t x_fp, int32_t y_fp, const uint8_t *data) {
-    int16_t pixel_x = x_fp >> FP_SHIFT;
-    int16_t pixel_y = y_fp >> FP_SHIFT;
+    int16_t tx = (x_fp >> FP_SHIFT) / 8;
+    int16_t ty = (y_fp >> FP_SHIFT) / 8;
 
-    if (pixel_x < 0 || pixel_y < 0) return 0;
+    if (tx < 0 || tx >= levelWidth || ty < 0 || ty >= levelHeight) {
+        return 0;
+    }
 
-    uint16_t tx = pixel_x / 8;
-    uint16_t ty = pixel_y / 8;
+    uint32_t index = ((uint32_t)ty * (uint32_t)levelWidth) + (uint32_t)tx;
+    uint8_t tile_id = data[index];
 
-    if (tx >= levelWidth || ty >= levelHeight) return 0;
-
-    uint8_t tile_id = data[ty * levelWidth + tx];
     for(uint8_t i = 0; solid_tiles[i] != 255; i++) {
         if (tile_id == solid_tiles[i]) return 1;
     }
+
     return 0;
 }
 

@@ -20,7 +20,7 @@ const uint8_t special_pipes[] = {
     74, 24,   // First pipe (right side, row 24)
     0xFF, 0xFF  // End marker
 };
-const int level1Width = 80; // TODO: change to real value
+const int level1Width = 256; // TODO: change to real value
 const int level1Height = 32; // TODO: change to real value
 
 uint8_t bump_timer = 0;
@@ -37,20 +37,21 @@ void loadMarioSprite(void) {
 void on_block_hit(uint16_t block_x, uint16_t block_y, uint8_t tile_id) {
     if (bump_timer > 0) return;
 
-    bump_is_brick = (tile_id == 12 || tile_id == 13);
+    uint16_t bx = block_x / 2;
+    uint16_t by = block_y / 2;
 
-    if (bump_is_brick) {
-        set_sprite_data(22, 1, &Level1TileLabel[12 * 16]);
-        set_sprite_data(24, 1, &Level1TileLabel[13 * 16]);
-    } else {
-        level1TileMap[block_y * level1Width + block_x] = 14;
-        level1TileMap[block_y * level1Width + block_x + 1] = 16;
-        level1TileMap[(block_y + 1) * level1Width + block_x] = 15;
-        level1TileMap[(block_y + 1) * level1Width + block_x + 1] = 17;
+    if (blocks_used[bx][by] == 1) {
+        return;
+    }
 
-        set_sprite_data(18, 4, &Level1TileLabel[14 * 16]);
+    if (tile_id >= 8 && tile_id <= 11) {
         coins++;
         score += 100;
+        blocks_used[bx][by] = 1;
+        bump_is_brick = 0;
+    }
+    else if (tile_id == 12 || tile_id == 13) {
+        bump_is_brick = 1;
     }
 
     uint8_t empty_tiles[4] = {127, 127, 127, 127};
@@ -61,7 +62,6 @@ void on_block_hit(uint16_t block_x, uint16_t block_y, uint8_t tile_id) {
     bump_block_y = block_y;
     bump_offset_y = 0;
 }
-
 
 uint8_t is_special_pipe(uint16_t pipe_x, uint16_t pipe_y) {
     for (uint8_t i = 0; special_pipes[i] != 0xFF; i += 2) {
@@ -91,10 +91,16 @@ void level1_init(void) {
     set_bkg_data(0, level1_TileLen, Level1TileLabel);
     set_bkg_submap(0, 0, 32, 32, level1TileMap, level1Width);
     levelTileMap = level1TileMap;
-    set_sprite_data(18, 4, &Level1TileLabel[14 * 16]);  // import empty "? blocks" tiles in sprite section
+    set_sprite_data(18, 4, &Level1TileLabel[14 * 16]); // import empty "? blocks" tiles in sprite section
     set_sprite_data(22, 1, &Level1TileLabel[12 * 16]); // top-left
     set_sprite_data(23, 1, &Level1TileLabel[13 * 16]); // bottom-right
     set_sprite_data(40, 7, Object_EnenTileLabel);
+    for (uint16_t i = 0; i < 128; i++) {
+        for (uint8_t j = 0; j < 16; j++) {
+            blocks_used[i][j] = 0;
+        }
+    }
+
     wait_vbl_done();
     sprite_hide_all();
     mario_init(4, 28);
@@ -165,7 +171,13 @@ void level1_loop(void) {
         // When animation ends, hide sprites and draw the final tiles on BKG
         if (bump_timer == 0) {
             hide_sprite(30); hide_sprite(31); hide_sprite(32); hide_sprite(33);
-            set_bkg_submap(bump_block_x, bump_block_y, 2, 2, level1TileMap, level1Width);
+            if (bump_is_brick) {
+                uint8_t empty_tiles[4] = {12, 12, 13, 13};
+                set_bkg_tiles(bump_block_x % 32, bump_block_y % 32, 2, 2, empty_tiles);
+            } else {
+                uint8_t used_tiles[4] = {14, 16, 15, 17};
+                set_bkg_tiles(bump_block_x % 32, bump_block_y % 32, 2, 2, used_tiles);
+            }
             bump_offset_y = 0;
         }
     }

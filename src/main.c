@@ -6,14 +6,15 @@
 #include "selectFileMenu.h"
 #include "level1.h"
 
-int levelWidth = NULL;
-int levelHeight = NULL;
-uint8_t * levelTileMap = NULL;
+uint16_t levelWidth = NULL;
+uint8_t levelHeight = NULL;
+const uint8_t * levelTileMap = NULL;
 int score = 0;
 int coins = 0;
 int timer = NULL;
 int life = 5;
 int is_paused = 0;
+uint8_t blocks_used[128][16];
 
 void main(void) {
     uint8_t state = MENU_HOME;

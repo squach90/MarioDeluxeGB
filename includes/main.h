@@ -8,14 +8,15 @@
 
 extern uint8_t saveIndex;
 
-extern int levelWidth;
-extern int levelHeight;
-extern uint8_t * levelTileMap;
+extern uint16_t levelWidth;
+extern uint8_t levelHeight;
+extern const uint8_t * levelTileMap;
 extern const uint8_t solid_tiles[];
 extern int score;
 extern int coins;
 extern int timer;
 extern int life;
 extern int is_paused;
+extern uint8_t blocks_used[128][16];
 
 #endif
