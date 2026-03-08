@@ -44,7 +44,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 # Run
 # --------------------
 run: all
-	java -jar ~/Emulicious/Emulicious.jar $(TARGET)
+	java -jar ~/Tools/Emulicious/Emulicious.jar $(TARGET)
 
 # --------------------
 # Clean
