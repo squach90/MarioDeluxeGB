@@ -47,7 +47,7 @@ void goomba_update(Goomba* g) {
 
         // Mario touch the side (damage)
         else if (my + 16 > g->y + 4 && my < g->y + 16) {
-            // TODO: live -1
+            mario_hit();
         }
     }
 }

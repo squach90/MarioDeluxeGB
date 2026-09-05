@@ -37,6 +37,18 @@ static uint8_t walk_frame = 0;
 static uint8_t walk_counter = 0;
 static uint8_t top_frame_index = 0;
 static uint8_t previous_keys = 0;
+static uint8_t last_moving = 0;
+
+// Remembers where mario_init() was last called from, so death/respawn
+// and goomba-hit respawn always return to the real level start
+// instead of a stale hardcoded position.
+static uint8_t spawn_tile_x = 4;
+static uint8_t spawn_tile_y = 2;
+
+// Brief invulnerability window after taking damage, to avoid losing
+// multiple lives from a single overlapping collision.
+#define HIT_IFRAMES 90
+static uint8_t iframes = 0;
 
 uint16_t camera_x = 0;
 uint16_t camera_y = 0;
@@ -62,12 +74,38 @@ void mario_init(uint8_t start_tile_x, uint8_t start_tile_y) {
     for (uint8_t i = 0; i < MARIO_SPRITE_COUNT; i++)
         mario_sprites[i] = i;
 
+    spawn_tile_x = start_tile_x;
+    spawn_tile_y = start_tile_y;
+
     mario_x = (int32_t)start_tile_x * 8;
     mario_y = (int32_t)start_tile_y * 8 << FP_SHIFT;
     mario_vy = 0;
     on_ground = 0;
     last_hit_block_x = 0xFFFF;
     last_hit_block_y = 0xFFFF;
+}
+
+static void mario_respawn(void) {
+    mario_init(spawn_tile_x, spawn_tile_y);
+}
+
+uint8_t mario_is_moving(void) {
+    return last_moving;
+}
+
+// Called by goomba (or any future hazard) on a damaging side collision.
+void mario_hit(void) {
+    if (iframes > 0) return;
+
+    iframes = HIT_IFRAMES;
+
+    if (life > 0) life--;
+    if (life == 0) {
+        // No game-over screen yet - refill lives so play can continue.
+        life = 5;
+    }
+
+    mario_respawn();
 }
 
 void mario_set_block_callback(block_hit_callback callback) {
@@ -155,15 +193,15 @@ void check_block_hit(int32_t x_fp, int32_t y_fp) {
         uint16_t block_y = ty;
 
         if (tile_id >= 8 && tile_id <= 11) {
-            if (tile_id == 10 || tile_id == 11) block_x = tx - 1;
-            if (tile_id == 9 || tile_id == 11)  block_y = ty - 1;
+            if ((tile_id == 10 || tile_id == 11) && tx > 0) block_x = tx - 1;
+            if ((tile_id == 9 || tile_id == 11)  && ty > 0) block_y = ty - 1;
         }
 
         else if (tile_id == 12 || tile_id == 13) {
-            if (levelTileMap[ty * levelWidth + (tx - 1)] == tile_id) {
+            if (tx > 0 && levelTileMap[ty * levelWidth + (tx - 1)] == tile_id) {
                 block_x = tx - 1;
             }
-            if (tile_id == 13) block_y = ty - 1;
+            if (tile_id == 13 && ty > 0) block_y = ty - 1;
         }
 
         if (block_x != last_hit_block_x || block_y != last_hit_block_y) {
@@ -215,6 +253,8 @@ void mario_update(void) {
     uint8_t newly_pressed = keys & (keys ^ previous_keys);
     uint8_t moving = 0;
 
+    if (iframes > 0) iframes--;
+
     uint8_t current_speed = (keys & J_B) ? MARIO_RUN_SPEED : MARIO_WALK_SPEED;
     uint8_t current_anim_delay = (keys & J_B) ? ANIM_RUN_DELAY : ANIM_WALK_DELAY;
 
@@ -231,7 +271,12 @@ void mario_update(void) {
 
     // 1. DEAD / RESET
     if ((mario_y >> FP_SHIFT) > (levelHeight * 8) || timer <= 0) {
-        mario_init(4, 2);
+        if (life > 0) life--;
+        if (life == 0) {
+            // No game-over screen yet - refill lives so play can continue.
+            life = 5;
+        }
+        mario_respawn();
         return;
     }
 
@@ -257,6 +302,8 @@ void mario_update(void) {
             moving = 0;
         }
     }
+
+    last_moving = moving;
 
     // 3. JUMP & GRAVITY
     if (on_ground) {

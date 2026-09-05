@@ -15,13 +15,13 @@
 
 Goomba g1;
 
-const uint8_t solid_tiles[] = {0, 1, 2, 3, 4, 5 ,6 ,7 ,8 ,9 , 10, 11, 12 ,13 ,14 ,15 ,16 ,17, 32, 33 ,34 ,35, 35, 37, 38, 39, 40, 41, 42, 255};
+const uint8_t solid_tiles[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 255};
 const uint8_t special_pipes[] = {
     74, 24,   // First pipe (right side, row 24)
     0xFF, 0xFF  // End marker
 };
-const int level1Width = 256; // TODO: change to real value
-const int level1Height = 32; // TODO: change to real value
+const int level1Width = 256;
+const int level1Height = 32;
 
 uint8_t bump_timer = 0;
 uint16_t bump_block_x, bump_block_y;
@@ -32,6 +32,34 @@ void loadMarioSprite(void);
 
 void loadMarioSprite(void) {
     set_sprite_data(0, mario_TileLen, MarioTileLabel);
+}
+
+// blocks_used[][] is a global that lives for the whole play session (it is
+// zero-initialized once at power-on, like any other BSS global) so a used
+// "?" block stays used even after leaving and re-entering the level.
+// set_bkg_submap() only ever loads the raw, "untouched" level data though,
+// so any time a column of the level is (re)loaded into VRAM we also need to
+// re-stamp the "used" look on top of it for any block already marked used.
+static void restore_used_blocks(uint16_t tile_x_start, uint8_t tile_count) {
+    for (uint16_t tx = tile_x_start; tx < (uint16_t)(tile_x_start + tile_count); tx++) {
+        if (tx >= levelWidth) break;
+
+        for (uint8_t ty = 0; ty < levelHeight; ty++) {
+            uint8_t tile_id = levelTileMap[(uint32_t)ty * levelWidth + tx];
+
+            if (tile_id < 8 || tile_id > 11) continue; // only coin "?" blocks are tracked
+
+            uint16_t block_x = tx;
+            uint16_t block_y = ty;
+            if ((tile_id == 10 || tile_id == 11) && tx > 0) block_x = tx - 1;
+            if ((tile_id == 9  || tile_id == 11) && ty > 0) block_y = ty - 1;
+
+            if (blocks_used[block_x / 2][block_y / 2] == 1) {
+                uint8_t used_tiles[4] = {14, 16, 15, 17};
+                set_bkg_tiles(block_x % 32, block_y % 32, 2, 2, used_tiles);
+            }
+        }
+    }
 }
 
 void on_block_hit(uint16_t block_x, uint16_t block_y, uint8_t tile_id) {
@@ -95,11 +123,12 @@ void level1_init(void) {
     set_sprite_data(22, 1, &Level1TileLabel[12 * 16]); // top-left
     set_sprite_data(23, 1, &Level1TileLabel[13 * 16]); // bottom-right
     set_sprite_data(40, 7, Object_EnenTileLabel);
-    for (uint16_t i = 0; i < 128; i++) {
-        for (uint8_t j = 0; j < 16; j++) {
-            blocks_used[i][j] = 0;
-        }
-    }
+
+    // NOTE: blocks_used is intentionally NOT cleared here. It's a global
+    // that persists for the whole play session, so leaving and re-entering
+    // the level keeps broken/used blocks broken. Re-stamp whatever's
+    // already been used onto the freshly (re)loaded initial screen:
+    restore_used_blocks(0, 32);
 
     wait_vbl_done();
     sprite_hide_all();
@@ -135,9 +164,8 @@ void level1_loop(void) {
         return;
     }
 
-    uint8_t moving = (keys & J_LEFT || keys & J_RIGHT);
-
     mario_update();
+    uint8_t moving = mario_is_moving();
 
     if (bump_timer > 0) {
         if (bump_timer > 5) bump_offset_y -= 2;
@@ -203,9 +231,11 @@ void level1_loop(void) {
             uint8_t column_to_draw = (camera_x >> 3) + 20;
 
             set_bkg_submap(column_to_draw, 0, 1, 32, levelTileMap, levelWidth);
+            restore_used_blocks(column_to_draw, 1);
         } else {
             uint8_t column_to_draw = (camera_x >> 3);
             set_bkg_submap(column_to_draw, 0, 1, 32, levelTileMap, levelWidth);
+            restore_used_blocks(column_to_draw, 1);
         }
     }
     old_camera_x = camera_x;

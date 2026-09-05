@@ -21,7 +21,7 @@ void hud_print_num(uint8_t x, uint8_t y, uint8_t digits, int value) {
 void hud_init(void) {
     set_win_data(HUD_TILE_OFFSET, window_TileLen, WindowTileLabel);
 
-    fill_win_rect(0, 0, 20, 1, HUD_TILE_OFFSET + 100); 
+    fill_win_rect(0, 0, 20, 1, HUD_TILE_OFFSET); // blank tile (first tile of the loaded HUD set)
 
     set_win_tile_xy(9, 0, HUD_TILE_OFFSET + 2);  // Coin
     set_win_tile_xy(10, 0, HUD_TILE_OFFSET + 0);

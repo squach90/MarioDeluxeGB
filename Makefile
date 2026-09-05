@@ -14,8 +14,10 @@ TARGET = $(BUILD_DIR)/mariodeluxe.gb
 # --------------------
 # Sources & objects
 # --------------------
-SRC  = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(ASSET_DIR)/*.c)
-OBJ  = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC))
+SRC_FILES   = $(wildcard $(SRC_DIR)/*.c)
+ASSET_FILES = $(wildcard $(ASSET_DIR)/*.c)
+OBJ  = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC_FILES)) \
+       $(patsubst $(ASSET_DIR)/%.c,$(BUILD_DIR)/%.o,$(ASSET_FILES))
 
 # --------------------
 # Tools & flags
@@ -38,6 +40,9 @@ $(TARGET): $(OBJ)
 
 # Compile .c -> build/.o
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	$(LCC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: $(ASSET_DIR)/%.c
 	$(LCC) $(CFLAGS) -c $< -o $@
 
 # --------------------
